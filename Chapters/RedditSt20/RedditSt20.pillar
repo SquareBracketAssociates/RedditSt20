@@ -1,0 +1,152 @@
+{ "title": "RedditSt20" }
+
+This booklet describes RedditSt20, a fork and extension of "Reddit.st in 10
+elegant classes" by another 10 or so classes.
+
+!! Reddit.st in 10 elegant classes
+
+Reddit.st, written by Sven Van Caekenberghe, demonstrates a small but
+non-trivial web application written in *Pharo>http://www.pharo.org/* using
+*Seaside>http://seaside.st*, *Glorp>http://glorp.org*, and
+*PostgreSQL>http://www.postgresql.org/*. It is described in its own
+*booklet>https://ci.inria.fr/pharo-contribution/view/Books/job/Booklet-Reddit/*.
+
+
+!! RedditSt20
+
+RedditSt20 extends Reddit.st to include the following:
+
+- GlorpSQLite
+- Seaside-MDL
+- username/password authentication
+- logging
+- 2-factor authentication
+
+!! Source Code
+
+To follow along transforming Reddit.st into RedditSt20 in the same way that
+the author did in writing this booklet, download a 
+*pre-built image of Reddit.st>https://ci.inria.fr/pharo-contribution/job/Reddit/*
+and go through the chapters in order. In the rest of this booklet, we refer to 
+this image as Reddit.image. 
+
+As each transformation took place, the code for RedditSt20 was committed to
+its *Smalltalkhub repository>http://smalltalkhub.com/#!/~PierceNg/RedditSt20*. 
+E.g., Reddit-PierceNg.14 corresponds to Reddit.st with the GlorpSQLite
+transformation. The appendix lists the major versions of the code in the
+repository.
+
+!! GlorpSQLite
+@GlorpSQLite
+
+*SQLite>http://sqlite.org* is highly reliable, full-featured,
+self-contained, embeddable, and the most used SQL database engine in the
+world. Glorp, Generic Light-weight Object-Relational Persistence, is an
+open source relational mapping layer that for Smalltalk including Pharo.
+GlorpSQLite is an integration of Glorp with SQLite for Pharo, written by
+the author.  RedditSt20 uses GlorpSQLite, instead of Glorp with PostgreSQL,
+as a demonstration of the pluggability of Glorp.
+
+!!! Installing SQLite
+
+SQLite is bundled with MacOS and most distributions of Linux. For use with
+Pharo, the SQLite shared library must be installed such as Pharo can locate
+it. The command line executable 'sqlite3' is also handy to have available.
+
+
+!!! Installing GlorpSQLite
+
+You may install GlorpSQLite from the Catalog Browser in Pharo 6 and above,
+or use the following snippet:
+
+[[[
+Gofer it
+  smalltalkhubUser: 'DBXTalk' project: 'Glorp';
+  package: 'ConfigurationOfGlorpSQLite';
+  load.
+(#ConfigurationOfGlorpSQLite asClass project version: #stable) load.
+]]]
+
+After installation, start Test Runner and run the Glorp test
+suite. Provided Pharo can locate the SQLite shared library, Test Runner
+should report that 889 tests have passed, with another 12 tests
+skipped. The test run produces the file sodbxtestu.db in the directory
+containing Reddit.image. You may open sodbxtestu.db with the 'sqlite3'
+command-line shell to inspect its structure and content.
+
+!!! Transforming Reddit.st
+
+The class RedditDatabaseResource connects Reddit.st to PostgreSQL. In
+RedditSt20, we subclass RedditDatabaseResource to use SQLite:
+
+[[[
+RedditDatabaseResource subclass: #RedditSQLiteResource
+  instanceVariableNames: ''
+  classVariableNames: ''
+  package: 'Reddit'
+]]]
+
+RedditSQLiteResource has one class-side method:
+
+[[[
+createLogin
+  "When you make changes here, you will most probably want to reset the cached login"
+
+  "self resetLogin"
+
+  ^ Login new 
+      database: UDBCSQLite3Platform new;
+      host: SmalltalkImage current imagePath asFileReference parent fullName,
+              FileSystem disk delimiter asString;
+      port: '';
+      username: '';
+      password: '';
+      databaseName: 'reddit.db';
+      yourself	
+]]]
+
+This method creates RedditSt20's database in the file reddit.db in the 
+directory containing Reddit.image.
+
+One more change to Reddit.st is required to switch from PostgreSQL to
+SQLite, in the method #newGlorpSession of RedditSession:
+
+[[[
+newGlorpSession
+  | session |
+  session := RedditSQLiteResource session.
+  session accessor logging: true.
+  ^ session
+]]]
+
+To complete the switch, in a playground in Reddit.image, evaluate the following
+snippet to create the database file reddit.db with the necessary structure:
+
+[[[
+RedditSQLiteResource 
+  resetLogin;
+  createLogin;
+  createTables
+]]]
+
+Use the 'sqlite3' shell to inspect reddit.db:
+
+[[[language=bash
+% sqlite3 reddit.db
+SQLite version 3.13.0 2016-05-18 10:57:30
+Enter ".help" for usage hints.
+sqlite> .schema
+CREATE TABLE REDDIT_LINKS (id INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL ,url text  NULL ,title text  NULL ,created timestamp  NULL ,points integer  NULL );
+sqlite> 
+]]]
+
+
+!! Appendix
+
+The source code for RedditSt20 lives on
+*Smalltalkhub>http://smalltalkhub.com/#!/~PierceNg/RedditSt20*. Here are
+the milestone versions of RedditSt20:
+
+- Reddit-PierceNg-14: This is Reddit.st after the GlorpSQLite (*@GlorpSQLite*) transformation.
+
+
