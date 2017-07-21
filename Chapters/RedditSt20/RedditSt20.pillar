@@ -41,11 +41,11 @@ repository.
 
 *SQLite>http://sqlite.org* is highly reliable, full-featured,
 self-contained, embeddable, and the most used SQL database engine in the
-world. Glorp, Generic Light-weight Object-Relational Persistence, is an
-open source relational mapping layer that for Smalltalk including Pharo.
-GlorpSQLite is an integration of Glorp with SQLite for Pharo, written by
-the author.  RedditSt20 uses GlorpSQLite, instead of Glorp with PostgreSQL,
-as a demonstration of the pluggability of Glorp.
+world. Glorp is an open source object relational mapping layer for
+Smalltalk including Pharo.  GlorpSQLite is an integration of Glorp with
+SQLite for Pharo, written by the author.  RedditSt20 uses GlorpSQLite,
+instead of Glorp with PostgreSQL, as a demonstration of the pluggability of
+Glorp.
 
 !!! Installing SQLite
 
@@ -137,6 +137,40 @@ SQLite version 3.13.0 2016-05-18 10:57:30
 Enter ".help" for usage hints.
 sqlite> .schema
 CREATE TABLE REDDIT_LINKS (id INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL ,url text  NULL ,title text  NULL ,created timestamp  NULL ,points integer  NULL );
+sqlite> 
+]]]
+
+!!! Running It
+
+Start Seaside if it isn't already running. Navigate to
+http://127.0.0.1:8080/reddit. You should see a brand new Reddit.st screen,
+as shown in figure *@brandNew*.
+
++Brand new RedditSt20>file://figures/brand_new.png|width=30|label=brandNew+ 
+
+Now add some links, to arrive at figure *@twoLinks*.
+
++Two links>file://figures/two_links.png|width=40|label=twoLinks+ 
+
+Inspect reddit.db again:
+
+[[[language=bash
+% sqlite3 reddit.db
+SQLite version 3.13.0 2016-05-18 10:57:30
+Enter ".help" for usage hints.
+sqlite> .mode line
+sqlite> select * from reddit_links;
+     id = 1
+    url = http://pharo.org
+  title = Pharo
+created = 2017-07-21T23:39:33.519006+08:00
+ points = 0
+
+     id = 2
+    url = http://sqlite.org
+  title = SQLite
+created = 2017-07-21T23:39:43.662133+08:00
+ points = 0
 sqlite> 
 ]]]
 
